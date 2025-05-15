@@ -218,7 +218,7 @@ class CAVAutoencoder:
             ).to(self.device)
         
         # Load the checkpoint and remove 'module.' prefix
-        checkpoint = torch.load(os.path.join(self.save_dir, f"autoencoder_layer_{layer_idx}_{self.key_params}.pth"))
+        checkpoint = torch.load(os.path.join(self.save_dir, f"autoencoder_layer_{layer_idx}_{self.key_params}.pth"), map_location=self.device )
         # import pdb; pdb.set_trace()
         # checkpoint = remove_module_prefix(checkpoint)
         # autoencoder = nn.DataParallel(autoencoder)

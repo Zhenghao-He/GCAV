@@ -17,7 +17,7 @@ import tensorflow as tf
 from align_dim import CAVAutoencoder
 from configs import alphas, concepts, bottlenecks, target, save_dir, dim_align_method, fuse_method, model_to_run, embed_dim, hidden_dims, dropout, device, num_random_exp, concepts_string, fuse_input, source_dir, working_dir, activation_dir, mymodel, save_dir,sess, is_attack
 
-
+from configs import k1, k2, embed_dim
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 # tf.config.run_functions_eagerly(True)
@@ -25,7 +25,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 def plot_results(results, random_counterpart=None, random_concepts=None, num_random_exp=100, min_p_val=0.05, save_path="/p/realai/zhenghao/CAVFusion/analysis/"):
     # 打开日志文件
     os.makedirs(save_path, exist_ok=True)
-    log_path = os.path.join(save_path, f"log_{'attacked' if is_attack else 'original'}_DottedToStriped.txt")
+    log_path = os.path.join(save_path, f"log_{'attacked' if is_attack else 'original'}_{concepts_string}.txt")
     # log_path = os.path.join(save_path, f"log_{'attacked' if is_attack else 'original'}_{concepts_string}.txt")
     with open(log_path, "w") as log:
         # Helper function: 判断是否是随机概念
@@ -148,15 +148,15 @@ def plot_results(results, random_counterpart=None, random_concepts=None, num_ran
 
 
 
-# original_cavs_path = os.path.join(save_dir, model_to_run, "original_cavs")
+original_cavs_path = os.path.join(save_dir, model_to_run, "original_cavs")
 
-# cavs = np.load(os.path.join(original_cavs_path,f"cavs_{concepts[0]}.npy"), allow_pickle=True)
+cavs = np.load(os.path.join(original_cavs_path,f"cavs_{concepts[0]}.npy"), allow_pickle=True)
 
 
-# autoencoders = CAVAutoencoder(input_dims=[len(cav[0]) for cav in cavs], embed_dim=embed_dim,hidden_dims=hidden_dims, dropout=dropout , device=device, save_dir=os.path.join(save_dir,model_to_run))
+autoencoders = CAVAutoencoder(input_dims=[len(cav[0]) for cav in cavs], embed_dim=embed_dim,hidden_dims=hidden_dims, dropout=dropout , device=device, save_dir=os.path.join(save_dir,model_to_run))
 
-# cav_dir = os.path.join(save_dir, model_to_run, "reconstructed_cavs", dim_align_method, fuse_method, autoencoders.key_params, fuse_input)
-cav_dir = os.path.join(save_dir, model_to_run, "reconstructed_cavs", dim_align_method, fuse_method, "[4096,4096]_0.5", fuse_input)
+cav_dir = os.path.join(save_dir, model_to_run, "reconstructed_cavs", dim_align_method, fuse_method, autoencoders.key_params, fuse_input, f"{k1:.2f}_{k2:.2f}")
+# cav_dir = os.path.join(save_dir, model_to_run, "reconstructed_cavs", dim_align_method, fuse_method, "[4096,4096]_0.5", fuse_input)
 # # where the images live.
 # save_path = save_dir
 # # TODO: replace 'YOUR_PATH' with path to downloaded models and images. 
@@ -206,6 +206,6 @@ if __name__ == "__main__":
     results = mytcav.run(run_parallel=False)
     print('done!')
     utils_plot.plot_results=plot_results # plot to file
-    save_path = os.path.join(save_dir, model_to_run, "recostructed_results")
+    save_path = os.path.join(save_dir, model_to_run, "recostructed_results", fuse_input, f"{k1:.2f}_{k2:.2f}_{embed_dim}")
     os.makedirs(save_path, exist_ok=True)
     utils_plot.plot_results(results, num_random_exp=num_random_exp,save_path=save_path)

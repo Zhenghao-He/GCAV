@@ -73,8 +73,8 @@ if __name__ == "__main__":
         original_cavs_path = os.path.join(save_dir, model_to_run, "original_cavs")
     cavs = get_cavs(concepts, bottlenecks, cav_dir=original_cavs_path, num_random_exp=num_random_exp)
     all_cavs = np.array(cavs, dtype=object)
-    np.save(os.path.join(original_cavs_path, f"cavs_attack.npy"), all_cavs)
-    # np.save(os.path.join(original_cavs_path, f"cavs_{concepts_string}.npy"), all_cavs)
+    # np.save(os.path.join(original_cavs_path, f"cavs_attack.npy"), all_cavs)
+    np.save(os.path.join(original_cavs_path, f"cavs_{concepts_string}.npy"), all_cavs)
     # import pdb;pdb.set_trace()
     for concept in tmp_concepts:
         print(f"getting cavs for {concept}")

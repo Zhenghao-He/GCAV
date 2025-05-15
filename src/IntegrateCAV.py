@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import accuracy_score
 import random
 from align_dim import augment_cavs
-from configs import  fuse_input, mymodel, source_dir, activation_dir
+from configs import  fuse_input, mymodel, source_dir, activation_dir, k1, k2, nce_loss, con_loss, var_loss, sim_loss
 # from configs import num_random_exp
 
 def normalize_tensor(x, eps=1e-8):
@@ -1094,14 +1094,21 @@ class IntegrateCAV(nn.Module):
         return F.cross_entropy(logits, labels)
     
     def train(self,embed_dim=2048, epochs=1000, batch_size=256, lr=1e-3, overwrite=False):#  embed_dim=2048, epochs = 2000):
-        save_dir = os.path.join(self.save_dir,"align_model", self.dim_align_method,self.concepts_string)
+        save_dir = os.path.join(self.save_dir,"align_model", self.dim_align_method, self.concepts_string)
         if not overwrite :
-            if os.path.exists(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}.npy")):
+            if os.path.exists(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy")) and fuse_input == "aligned_cavs":
                 print("Aligned CAVs already exist. Loading from saved files.")
-                self.aligned_cavs = np.load(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}.npy"), allow_pickle=True)
+                self.aligned_cavs = np.load(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy"), allow_pickle=True)
                 print("Aligned CAVs loaded!")
                 self.__isAligned = True
                 return self.aligned_cavs
+            elif os.path.exists(os.path.join(save_dir,f"input_cavs_{self.autoencoders.key_params}.npy")) and fuse_input == "input_cavs":
+                print("Input CAVs already exist. Loading from saved files.")
+                self.aligned_cavs = np.load(os.path.join(save_dir,f"input_cavs_{self.autoencoders.key_params}.npy"), allow_pickle=True)
+                print("Input CAVs loaded!")
+                self.__isAligned = False
+                return self.aligned_cavs
+                
         model = CAVAlignmentModel(input_dim=embed_dim, hidden_dim=4096, output_dim=embed_dim).to(self.device) # , input_dim=2048, hidden_dim=1024, output_dim=256
 
         # optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.05)
@@ -1149,7 +1156,7 @@ class IntegrateCAV(nn.Module):
             # 计算 InfoNCE 损失
             loss_info = info_nce_loss(anchor_emb, positive_emb, negative_emb)
             loss_con = consistency_loss(anchor_emb, positive_emb, anchors, positives)
-            loss = loss_info + 3 * loss_con
+            loss = nce_loss * loss_info + con_loss * loss_con # default con_loss =  3 nce_loss = 1
             # print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}")
             # print(f"Epoch [{epoch+1}/{epochs}], InfoNCE Loss: {loss_info.item():.4f}")
             # print(f"Epoch [{epoch+1}/{epochs}], Consistency Loss: {loss_con.item():.4f}")
@@ -1181,8 +1188,8 @@ class IntegrateCAV(nn.Module):
         print("CAVs aligned!")
         self.aligned_cavs = np.array(aligned_cavs)
         del model # release memory
-        np.save(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}.npy"), self.aligned_cavs)
-        print("Aligned CAVs saved at", os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}.npy"))
+        np.save(os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy"), self.aligned_cavs)
+        print("Aligned CAVs saved at", os.path.join(save_dir,f"aligned_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy"))
         self.__isAligned = True
         return self.aligned_cavs
 
@@ -1192,7 +1199,8 @@ class IntegrateCAV(nn.Module):
         Fuse the aligned CAVs
         """
         if not self.__isAligned:
-            raise ValueError("CAVs are not aligned. Please align the CAVs first.")
+            print("WARNING: CAVs are not aligned. Please align the CAVs first.")
+            # raise ValueError("CAVs are not aligned. Please align the CAVs first.")
 
         save_dir = os.path.join(self.save_dir,"fuse_model", self.dim_align_method, fuse_method, self.concepts_string, fuse_input)
         if not overwrite:
@@ -1241,8 +1249,14 @@ class IntegrateCAV(nn.Module):
             else:
                 print("using aligned_cavs as input")
                 aligned_cavs = self.aligned_cavs
-            
-            aligned_cavs = aligned_cavs[:,:10,:]
+            # import pdb; pdb.set_trace()
+            if not isinstance(aligned_cavs, torch.Tensor):
+                aligned_cavs = torch.from_numpy(aligned_cavs)
+
+            aligned_cavs = aligned_cavs[:, :num_random_exp, :].float().to(self.device)
+
+            # aligned_cavs = aligned_cavs[:,:num_random_exp,:]
+            # aligned_cavs = aligned_cavs[:,:10,:]
             # import pdb; pdb.set_trace()
             
             act_generator = act_gen.ImageActivationGenerator(mymodel, source_dir, activation_dir, max_examples=100)
@@ -1280,8 +1294,8 @@ class IntegrateCAV(nn.Module):
             criterion = TCAVLoss(
                 device=self.device,
                 num_concepts=len(concepts),
-                var_weight=3,
-                similarity_weight=1,
+                var_weight=var_loss,   # default = 3
+                similarity_weight=sim_loss,
                 margin=0.15
             )
 
@@ -1293,11 +1307,13 @@ class IntegrateCAV(nn.Module):
                     
                     cav_batch = cav_batch.to(self.device)
                     optimizer.zero_grad()
-                    with torch.cuda.amp.autocast():  # 开启混合精度
+                    # with torch.cuda.amp.autocast():  # 开启混合精度
+                    with torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16):
+
                         fused_cav = model(cav_batch)
                         loss = criterion(
-                            input=cav_batch,
-                            fused_cav=fused_cav,
+                            input=cav_batch.float(),
+                            fused_cav=fused_cav.float(),
                             decoders=decoders, 
                             class_acts_layer=class_acts_layer, 
                             class_examples=class_examples, 
@@ -1333,7 +1349,7 @@ class IntegrateCAV(nn.Module):
 
             model = model.eval()
             os.makedirs(save_dir, exist_ok=True)
-            save_path  = os.path.join(save_dir,f"fuse_model_{self.autoencoders.key_params}.pth")
+            save_path  = os.path.join(save_dir,f"fuse_model_{self.autoencoders.key_params}_{k2}.pth")
             torch.save(model.state_dict(), save_path)
             print(f"Model saved to {save_path}")
 
@@ -1349,6 +1365,6 @@ class IntegrateCAV(nn.Module):
             raise NotImplementedError(f"Fuse method {fuse_method} is not implemented.")
         self.fused_cavs = fused_cavs # [num_concepts, cav_dim]
         os.makedirs(save_dir, exist_ok=True)
-        np.save(os.path.join(save_dir,f"fused_cavs_{self.autoencoders.key_params}.npy"), fused_cavs)
-        print("Fused CAVs saved at", os.path.join(save_dir,f"fused_cavs_{self.autoencoders.key_params}.npy"))
+        np.save(os.path.join(save_dir,f"fused_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy"), fused_cavs)
+        print("Fused CAVs saved at", os.path.join(save_dir,f"fused_cavs_{self.autoencoders.key_params}_{k1}_{k2}.npy"))
         return self.fused_cavs

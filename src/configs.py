@@ -4,15 +4,26 @@ import tcav.utils as utils
 import tcav.model  as model
 import os
 alphas = [0.1]   
-num_random_exp=10
+num_random_exp=2
+if num_random_exp != 10:
+    for i in range(10):
+        print("WARNING: num_random_exp is not 10, please check the code")
+# target = 'cab'
+# concepts = ["car"]
+
+# target = 'groom'
+# concepts = ["human"]
+
+# target = 'robin'
+# concepts = ["bird"]
 
 target = 'zebra'  
 # concepts = ["striped"]
 # concepts = ["perturbed_images_mixed5a"]  #
 # concepts = ["dotted_to_striped_mixed3a_light","dotted_to_striped_mixed3b_light","dotted_to_striped_mixed4a_light","dotted_to_striped_mixed4b_light","dotted_to_striped_mixed4c_light","dotted_to_striped_mixed4d_light","dotted_to_striped_mixed4e_light","dotted_to_striped_mixed5a_light","dotted_to_striped_mixed5b_light"]  #
 # concepts = ["dotted","striped"]  #
-# concepts = ["dotted","striped","zigzagged"]  # 
-concepts = ["tmp"]  # 
+concepts = ["dotted","striped","zigzagged"]  # 
+# concepts = ["tmp"]  # 
 
 # target = 'honeycomb'  
 # concepts =["honeycombed"] 
@@ -41,19 +52,35 @@ concepts = ["tmp"]  #
 
 
 concepts_string = "_".join(concept.replace(" ", "") for concept in concepts)
-# is_attack = False
-is_attack = True
+is_attack = False
+# is_attack = True
 attacked_layer_name = "mixed5a"
 # fuse_input = "input_cavs"
+# fuse_input = "none_fuse"
 fuse_input = "aligned_cavs"
 # concept_map_type = "reconstructed_cavs"
 concept_map_type = "original_cavs"
 hidden_dims = [4096]
-embed_dim = 4096
+# embed_dim = 1024
+embed_dim = 2048
+# embed_dim = 4096
 # model_to_run = 'ResNet50V2'
 # model_to_run = 'MobileNetV2'
 model_to_run = 'GoogleNet'
 #******************
+
+# nce_loss = 1
+# con_loss = 3
+nce_loss = 1
+con_loss = 3
+k1 =  nce_loss / con_loss
+
+# var_loss = 3
+# sim_loss = 1
+var_loss = 3
+sim_loss = 1
+k2 = var_loss / sim_loss
+
 save_dir = "/p/realai/zhenghao/CAVFusion/analysis/"
 source_dir = '/p/realai/zhenghao/CAVFusion/data'
 

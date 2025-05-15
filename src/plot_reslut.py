@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from scipy.stats import norm
-from configs import model_to_run, save_dir, concepts_string, bottlenecks,target
+from configs import model_to_run, save_dir, concepts_string, bottlenecks,target, fuse_input, k1, k2, embed_dim
 
 TITLE_FONT_SIZE = 26    # 标题字体大小
 LABEL_FONT_SIZE = 22    # 标签字体大小
@@ -113,7 +113,11 @@ def plot_violin(concept_scores, output_filename, type):
     for concept, scores in concept_scores.items():
         for s in scores:
             data.append((concept, s))
-    df = pd.DataFrame(data, columns=["Concept", "TCAV_Score"])
+    
+    if type == "original":
+        df = pd.DataFrame(data, columns=["Concept", "TCAV_Score"])
+    elif type == "proposed":
+        df = pd.DataFrame(data, columns=["Concept", "TGCAV_Score"])
     
     # 设置调色盘，确保每个 concept 颜色不同
     unique_concepts = df["Concept"].unique()
@@ -121,12 +125,14 @@ def plot_violin(concept_scores, output_filename, type):
 
     plt.figure(figsize=(10, 6))
 
-    sns.violinplot(x="Concept", y="TCAV_Score", data=df, palette=palette)
+    
 
     if type == "original":
+        sns.violinplot(x="Concept", y="TCAV_Score", data=df, palette=palette)
         plt.title(f"$\\bf{{{target}}}$ - original method on {model_to_run}",
             fontsize=TITLE_FONT_SIZE)
     elif type == "proposed":
+        sns.violinplot(x="Concept", y="TGCAV_Score", data=df, palette=palette)
         plt.title(f"$\\bf{{{target}}}$ - proposed method on {model_to_run}",
                 fontsize=TITLE_FONT_SIZE)
 
@@ -134,7 +140,11 @@ def plot_violin(concept_scores, output_filename, type):
 
     # plt.title(f"{type} Violin Plot of TCAV Scores per Concept - {model_to_run}", fontsize=TITLE_FONT_SIZE)
     plt.xlabel("Concept", fontsize=LABEL_FONT_SIZE)
-    plt.ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
+    if type == "original":
+        plt.ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
+    elif type == "proposed":
+        plt.ylabel("TGCAV Score", fontsize=LABEL_FONT_SIZE)
+    # plt.ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
 
     plt.xticks(fontsize=TICK_FONT_SIZE)  # 调整x轴刻度字体大小
     plt.yticks(fontsize=TICK_FONT_SIZE)  # 调整y轴刻度字体大小
@@ -173,20 +183,23 @@ def plot_tcav_bar_chart(concept_scores,layer_names,concept_stds,output_filename,
     ax.set_xticklabels(list(concept_scores.keys()))
 
     # ax.set_xlabel("Concepts", fontsize=LABEL_FONT_SIZE)
-    ax.set_ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
+
+        
 
 
     if type == "original":
+        ax.set_ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
         ax.set_title(rf"$\bf{{{target}}}$ - original method on {model_to_run}",
                     fontsize=TITLE_FONT_SIZE)
     elif type == "proposed":
+        ax.set_ylabel("TGCAV Score", fontsize=LABEL_FONT_SIZE)
         ax.set_title(rf"$\bf{{{target}}}$ - proposed method on {model_to_run}",
                     fontsize=TITLE_FONT_SIZE)
 
 
     # ax.set_title(f"{type} TCAV Scores with Variance Across Layers - {model_to_run}", fontsize=TITLE_FONT_SIZE)
-    ax.legend(title="Layer", bbox_to_anchor=(0.95, 0.95), loc="upper left")
-    # ax.legend(loc="upper right", bbox_to_anchor=(0.95, 0.95), fontsize=12)
+    # ax.legend(title="Layer", bbox_to_anchor=(0.95, 0.95), loc="upper left")
+    ax.legend(loc="upper right", title="Layer", bbox_to_anchor=(0, 0), fontsize=15)
     ax.tick_params(axis='both', labelsize=LABEL_FONT_SIZE)
     ax.grid(axis='y', linestyle='--', alpha=0.5)
 
@@ -251,10 +264,10 @@ if __name__ == "__main__":
     if type == "original":
         save_path = os.path.join(save_dir, model_to_run, "original_results")
     elif type == "proposed":
-        save_path = os.path.join(save_dir, model_to_run, "recostructed_results")
+        save_path = os.path.join(save_dir, model_to_run, "recostructed_results", fuse_input, f"{k1:.2f}_{k2:.2f}_{embed_dim}")
  
-    # input_filename = f"log_original_{concepts_string}.txt"             
-    input_filename = "log_attacked_DottedToStriped.txt"             
+    input_filename = f"log_original_{concepts_string}.txt"             
+    # input_filename = "log_attacked_DottedToStriped.txt"             
     # input_filename = f"log_{concepts_string}.txt"             
     stats_output_filename = f"tcav_stats_{concepts_string}.txt"   
     violin_output_filename = f"tcav_violin_{concepts_string}.png" 
