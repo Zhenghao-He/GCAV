@@ -150,7 +150,7 @@ python src/plot_result.py
 
 ### Performance Improvements
 
-我们的实验在 **GoogleNet**、**ResNet50V2** 和 **MobileNetV2** 上展示了显著提升。下表详细展示了不同目标类别和概念的结果：
+Our experiments on **GoogleNet**, **ResNet50V2**, and **MobileNetV2** demonstrate significant improvements. The following table shows detailed results for different target classes and concepts:
 
 | Target | Concept | Method | GoogleNet |   |   |   | ResNet50V2 |   |   |   | MobileNetV2 |   |   |   |
 |:------:|:-------:|:------:|:---------:|:--:|:--:|:--:|:----------:|:--:|:--:|:--:|:-----------:|:--:|:--:|:--:|
@@ -180,23 +180,48 @@ python src/plot_result.py
 - **🛡️ Adversarial Robustness**: 40-60% more stable under adversarial attacks compared to traditional TCAV
 - **📈 Better Localization**: More precise concept attribution with reduced spurious activations
 
+### Adversarial Robustness Evaluation
+
+We evaluated the robustness of GCAV against adversarial attacks using Brown's method, targeting the "dotted" concept in the "zebra" class at the GoogleNet mixed5a layer:
+
+| Method | Mixed5a | Mixed5a Change (%) | Mean | Mean Change (%) |
+|:------:|:-------:|:-----------------:|:----:|:--------------:|
+| **TCAV** | 0.52 | -- | 0.46 | -- |
+| **TCAV (Attacked)** | 0.96 | **+84.61%** | 0.75 | **+61.77%** |
+| **TGCAV** | 0.38 | -- | 0.37 | -- |
+| **TGCAV (Attacked)** | 0.49 | **+28.49%** | 0.53 | **+42.63%** |
+
+**Key Robustness Insights:**
+- **Traditional TCAV**: Vulnerable to adversarial manipulation, with up to 84.61% increase in targeted layer scores
+- **Our TGCAV**: More resilient with only 28.49% increase under the same attack
+- **Global Integration**: By fusing information across layers, GCAV reduces the impact of single-layer perturbations
+
 ### Visual Results
 
-#### TCAV vs TGCAV Score Comparison
-The following violin plots demonstrate the improvement in concept activation consistency across layers:
+#### Cross-Layer Consistency Improvement (Figure 2)
+The following figure shows TCAV score comparisons across layers on GoogleNet before (left) and after (right) applying our method:
 
-| Original TCAV (High Variance) | Our TGCAV (Reduced Variance) |
-|:---:|:---:|
-| ![TCAV Results](imgs/tcav_comparison_dotted_striped.png) | ![TGCAV Results](imgs/tgcav_comparison_dotted_striped.png) |
+![TCAV vs TGCAV Comparison](imgs/figure2_tcav_comparison.png)
 
-#### Cross-Layer Consistency Improvement
-Bar charts showing TCAV scores across different layers for the "cobwebbed" concept:
+**Key Observations:**
+- **Original TCAV (Left)**: High variance across layers, spurious activations in irrelevant concepts
+- **Our TGCAV (Right)**: Consistent scores across layers, reduced spurious activations
+- **Cross-layer stability**: TGCAV eliminates layer selection ambiguity
 
-| Original TCAV | Our TGCAV |
-|:---:|:---:|
-| ![TCAV Bar Chart](imgs/tcav_bar_cobwebbed.png) | ![TGCAV Bar Chart](imgs/tgcav_bar_cobwebbed.png) |
+#### Concept Localization Maps (Figure 3)
 
-*Notice how TGCAV achieves more consistent scores across layers, eliminating the high variance seen in traditional TCAV.*
+Our GCAV framework provides improved concept localization through Visual-TCAV concept mapping. The visualization shows three representative concepts with **original method (top row)** vs **our method (bottom row)**:
+
+| **Striped (Zebra)** | **Cobwebbed (Spider Web)** | **Honeycombed (Honeycomb)** |
+|:---:|:---:|:---:|
+| ![Zebra Original](imgs/concept_map_zebra.png) | ![Cobweb Original](imgs/concept_map_cobweb1.png) | ![Honeycomb Original](imgs/concept_map_honeycomb.png) |
+| ![Zebra TGCAV](imgs/concept_map_zebra_reconstructed_1.png) | ![Cobweb TGCAV](imgs/concept_map_cobweb_reconstructed_1.png) | ![Honeycomb TGCAV](imgs/concept_map_honeycomb1.png) |
+
+**Concept Localization Benefits:**
+- **🎯 Precise Focus**: Our method focuses more precisely on characteristic patterns while reducing distractions from irrelevant regions
+- **🔍 Reduced Background Noise**: Less activation in background regions (sky, surrounding environment) compared to original TCAV
+- **🌐 Semantic Consistency**: Better alignment with expected concept locations - stripes on zebra body, web structures, honeycomb patterns
+- **📊 Enhanced Interpretability**: More concentrated activations on defining structural patterns, eliminating unnecessary activations in non-characteristic areas
 
 ## 📁 Project Structure
 
