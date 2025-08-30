@@ -214,8 +214,8 @@ Our GCAV framework provides improved concept localization through Visual-TCAV co
 
 | **Striped (Zebra)** | **Cobwebbed (Spider Web)** | **Honeycombed (Honeycomb)** |
 |:---:|:---:|:---:|
-| ![Zebra Original](imgs/concept_map_zebra.png) | ![Cobweb Original](imgs/concept_map_cobweb1.png) | ![Honeycomb Original](imgs/concept_map_honeycomb.png) |
-| ![Zebra TGCAV](imgs/concept_map_zebra_reconstructed_1.png) | ![Cobweb TGCAV](imgs/concept_map_cobweb_reconstructed_1.png) | ![Honeycomb TGCAV](imgs/concept_map_honeycomb1.png) |
+| ![Zebra Original](imgs/concept_map_zebra.png) | ![Cobweb Original](imgs/concept_map_original_cobweb3.png) | ![Honeycomb Original](imgs/concept_map_honeycomb.png) |
+| ![Zebra TGCAV](imgs/concept_map_zebra_reconstructed_1.png) | ![Cobweb TGCAV](imgs/concept_map_cobweb_reconstructed_3.png) | ![Honeycomb TGCAV](imgs/concept_map_honeycomb1.png) |
 
 **Concept Localization Benefits:**
 - **🎯 Precise Focus**: Our method focuses more precisely on characteristic patterns while reducing distractions from irrelevant regions
