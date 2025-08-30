@@ -12,7 +12,8 @@ LABEL_FONT_SIZE = 22    # 标签字体大小
 TICK_FONT_SIZE = 20     # 刻度字体大小
 
 import re
-
+import matplotlib
+matplotlib.rcParams['font.family'] = 'Times New Roman'  # 设置全局字体为 Times New Roman
 def parse_tcav_file(filename):
     """
     解析 TCAV 结果文件，提取每个概念在不同层的 TCAV 分数、标准差和显著性信息。
@@ -62,7 +63,6 @@ def parse_tcav_file(filename):
     return concept_means, concept_stds, concept_significance
 
 
-import numpy as np
 from scipy.stats import skew, iqr
 
 def compute_statistics(concept_scores):
@@ -153,59 +153,158 @@ def plot_violin(concept_scores, output_filename, type):
     plt.tight_layout()
     plt.savefig(output_filename)
     plt.close()
-def plot_tcav_bar_chart(concept_scores,layer_names,concept_stds,output_filename,type):
-    """
-    Plots a bar chart of TCAV scores for different concepts.
+# def plot_tcav_bar_chart(concept_scores,layer_names,concept_stds,output_filename,type):
+#     """
+#     Plots a bar chart of TCAV scores for different concepts.
     
-    Parameters:
-        concept_scores (dict): A dictionary where each key is a concept name and 
-                               each value is a list of TCAV scores.
-    """
-    # Extract concepts and compute statistics
-    num_layers = len(layer_names)
-    num_concepts = len(concept_scores)
+#     Parameters:
+#         concept_scores (dict): A dictionary where each key is a concept name and 
+#                                each value is a list of TCAV scores.
+#     """
+#     # Extract concepts and compute statistics
+#     num_layers = len(layer_names)
+#     num_concepts = len(concept_scores)
     
-    x = np.arange(num_concepts)  # x 轴上的概念位置
-    width = 0.1  # 每个柱形的宽度
+#     x = np.arange(num_concepts)  # x 轴上的概念位置
+#     width = 0.1  # 每个柱形的宽度
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    colors = plt.cm.viridis(np.linspace(0, 1, num_layers))  # 生成不同层的颜色
+#     fig, ax = plt.subplots(figsize=(10, 6))
+#     colors = plt.cm.viridis(np.linspace(0, 1, num_layers))  # 生成不同层的颜色
 
-    for i, layer in enumerate(layer_names):
-        means = [concept_scores[concept][i] for concept in concept_scores]  # 提取均值
-        # std_devs = [concept_stds[concept][i] for concept in concept_stds]  # 提取标准差
+#     for i, layer in enumerate(layer_names):
+#         means = [concept_scores[concept][i] for concept in concept_scores]  # 提取均值
+#         # std_devs = [concept_stds[concept][i] for concept in concept_stds]  # 提取标准差
 
-        ax.bar(x + i * width, means, width, label=layer, color=colors[i], 
-               alpha=0.8, capsize=4, error_kw={'elinewidth': 1.5})  # 误差棒
+#         ax.bar(x + i * width, means, width, label=layer, color=colors[i], 
+#                alpha=0.8, capsize=4, error_kw={'elinewidth': 1.5})  # 误差棒
 
-    ax.set_xticks(x + (num_layers / 2) * width)  # 调整 x 轴标签位置
-    # ax.set_xticklabels(concept_scores.keys(), ha="right")
-    ax.set_xticklabels(list(concept_scores.keys()))
+#     ax.set_xticks(x + (num_layers / 2) * width)  # 调整 x 轴标签位置
+#     # ax.set_xticklabels(concept_scores.keys(), ha="right")
+#     ax.set_xticklabels(list(concept_scores.keys()))
 
-    # ax.set_xlabel("Concepts", fontsize=LABEL_FONT_SIZE)
+#     # ax.set_xlabel("Concepts", fontsize=LABEL_FONT_SIZE)
 
         
 
 
+#     if type == "original":
+#         ax.set_ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
+#         ax.set_title(rf"$\bf{{{target}}}$ - original method on {model_to_run}",
+#                     fontsize=TITLE_FONT_SIZE)
+#     elif type == "proposed":
+#         ax.set_ylabel("TGCAV Score", fontsize=LABEL_FONT_SIZE)
+#         ax.set_title(rf"$\bf{{{target}}}$ - proposed method on {model_to_run}",
+#                     fontsize=TITLE_FONT_SIZE)
+
+
+#     # ax.set_title(f"{type} TCAV Scores with Variance Across Layers - {model_to_run}", fontsize=TITLE_FONT_SIZE)
+#     # ax.legend(title="Layer", bbox_to_anchor=(0.95, 0.95), loc="upper left")
+#     ax.legend(loc="upper right", title="Layer", bbox_to_anchor=(0, 0), fontsize=15)
+#     ax.tick_params(axis='both', labelsize=LABEL_FONT_SIZE)
+#     ax.grid(axis='y', linestyle='--', alpha=0.5)
+
+#     plt.tight_layout()
+#     plt.savefig(output_filename)
+#     plt.close()
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_tcav_bar_chart(
+    concept_scores, 
+    layer_names, 
+    concept_stds, 
+    output_filename, 
+    type, 
+    target="Target", 
+    model_to_run="Model"
+):
+    """
+    单图论文风格bar chart，图例右上，六宫格配色，适用于TCAV/TGCAV。
+    """
+    LABEL_FONT_SIZE = 16
+    TITLE_FONT_SIZE = 18
+
+    num_layers = len(layer_names)
+    num_concepts = len(concept_scores)
+    # x = np.arange(num_concepts)
+    bar_width = 0.11  # 跟六宫格宽度保持一致
+
+    # 论文配色（顺序不变，够用九层）
+    layer_colors = [
+        "#4B225F", "#6147A6", "#3589C0", "#45B5AA",
+        "#54C571", "#B6C923", "#F9E505", "#FFC300", "#FF5733", "#C70039",
+    ]
+    colors = layer_colors[:num_layers]
+
+    fig, ax = plt.subplots(figsize=(6, 4), dpi=300)
+
+    # 柱状图
+    # for i, layer in enumerate(layer_names):
+    #     means = [concept_scores[concept][i] for concept in concept_scores]
+    #     stds = [concept_stds[concept][i] for concept in concept_scores] if concept_stds else None
+    #     ax.bar(
+    #         x + (i - (num_layers-1)/2) * bar_width,
+    #         means, 
+    #         width=bar_width,
+    #         label=layer,
+    #         color=colors[i],
+    #         edgecolor='black', linewidth=0.25,
+    #         alpha=0.87
+    #     )
+    group_gap = 0.11  # 可以调大或调小, 一般0.3~0.7都可
+    x = np.arange(num_concepts) * (num_layers * bar_width + group_gap)
+
+    for i, layer in enumerate(layer_names):
+        ax.bar(
+            x + i * bar_width,
+            [concept_scores[concept][i] for concept in concept_scores],
+            width=bar_width,
+            label=layer,
+            color=colors[i],
+            edgecolor='black', linewidth=0.25,
+            alpha=0.87
+        )
+
+
+    # 刻度、标签、辅助线等风格
+    # ax.set_xticks(x)
+    ax.set_xticks(x + (num_layers/2-0.5)*bar_width)
+    ax.set_xticklabels(list(concept_scores.keys()), fontname='Times New Roman', fontsize=LABEL_FONT_SIZE)
+    ax.set_ylim([0, 1.05])
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels([f"{v:.1f}" for v in [0,0.2,0.4,0.6,0.8,1.0]], fontname='Times New Roman', fontsize=LABEL_FONT_SIZE)
+    ax.yaxis.grid(True, linestyle='--', linewidth=0.55, alpha=0.5)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # 标题和y轴
     if type == "original":
-        ax.set_ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE)
-        ax.set_title(rf"$\bf{{{target}}}$ - original method on {model_to_run}",
-                    fontsize=TITLE_FONT_SIZE)
+        ax.set_ylabel("TCAV Score", fontsize=LABEL_FONT_SIZE, fontname='Times New Roman')
+        ax.set_title(f"{target} - Original", fontsize=TITLE_FONT_SIZE, fontweight='bold', fontname='Times New Roman', loc='left')
     elif type == "proposed":
-        ax.set_ylabel("TGCAV Score", fontsize=LABEL_FONT_SIZE)
-        ax.set_title(rf"$\bf{{{target}}}$ - proposed method on {model_to_run}",
-                    fontsize=TITLE_FONT_SIZE)
+        ax.set_ylabel("TGCAV Score", fontsize=LABEL_FONT_SIZE, fontname='Times New Roman')
+        ax.set_title(f"{target} - Proposed", fontsize=TITLE_FONT_SIZE, fontweight='bold', fontname='Times New Roman', loc='left')
 
+    # plt.subplots_adjust(right=0.55) 
+    # 图例在图内右上
+    ax.legend(
+        loc="upper left",         # 注意：改成upper left
+        bbox_to_anchor=(1, 1), # 1.16可以再调大一点
+        fontsize=12,
+        title="Layer",
+        title_fontsize=11,
+        frameon=True,           # ★有边框了
+        labelspacing=0.2,
+        borderaxespad=0.4,
+        handlelength=1.0,
+        ncol=1
+    )
 
-    # ax.set_title(f"{type} TCAV Scores with Variance Across Layers - {model_to_run}", fontsize=TITLE_FONT_SIZE)
-    # ax.legend(title="Layer", bbox_to_anchor=(0.95, 0.95), loc="upper left")
-    ax.legend(loc="upper right", title="Layer", bbox_to_anchor=(0, 0), fontsize=15)
-    ax.tick_params(axis='both', labelsize=LABEL_FONT_SIZE)
-    ax.grid(axis='y', linestyle='--', alpha=0.5)
-
+    ax.tick_params(axis='both', which='major', labelsize=LABEL_FONT_SIZE)
     plt.tight_layout()
-    plt.savefig(output_filename)
+    plt.savefig(output_filename, bbox_inches='tight', dpi=300)
     plt.close()
+
 
 
 def plot_bell_curves(concept_scores, output_filename, type):
@@ -264,14 +363,15 @@ if __name__ == "__main__":
     if type == "original":
         save_path = os.path.join(save_dir, model_to_run, "original_results")
     elif type == "proposed":
-        save_path = os.path.join(save_dir, model_to_run, "recostructed_results", fuse_input, f"{k1:.2f}_{k2:.2f}_{embed_dim}")
+        # save_path = os.path.join(save_dir, model_to_run, "recostructed_results", fuse_input, f"{k1:.2f}_{k2:.2f}_{embed_dim}")
+        save_path = os.path.join(save_dir, model_to_run, "recostructed_results")
  
     input_filename = f"log_original_{concepts_string}.txt"             
     # input_filename = "log_attacked_DottedToStriped.txt"             
     # input_filename = f"log_{concepts_string}.txt"             
     stats_output_filename = f"tcav_stats_{concepts_string}.txt"   
-    violin_output_filename = f"tcav_violin_{concepts_string}.png" 
-    bell_output_filename = f"tcav_bell_{concepts_string}.png"    
-    bar_output_filename = f"tcav_bar_{concepts_string}.png"
+    violin_output_filename = f"tcav_violin_{concepts_string}.pdf" 
+    bell_output_filename = f"tcav_bell_{concepts_string}.pdf"    
+    bar_output_filename = f"tcav_bar_{concepts_string}.pdf"
     
     process_tcav_file(save_path, input_filename, stats_output_filename, violin_output_filename, bell_output_filename,bar_output_filename, type,bottlenecks)

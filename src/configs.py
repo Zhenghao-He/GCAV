@@ -17,12 +17,12 @@ if num_random_exp != 10:
 # target = 'robin'
 # concepts = ["bird"]
 
-target = 'zebra'  
+# target = 'zebra'  
 # concepts = ["striped"]
 # concepts = ["perturbed_images_mixed5a"]  #
 # concepts = ["dotted_to_striped_mixed3a_light","dotted_to_striped_mixed3b_light","dotted_to_striped_mixed4a_light","dotted_to_striped_mixed4b_light","dotted_to_striped_mixed4c_light","dotted_to_striped_mixed4d_light","dotted_to_striped_mixed4e_light","dotted_to_striped_mixed5a_light","dotted_to_striped_mixed5b_light"]  #
 # concepts = ["dotted","striped"]  #
-concepts = ["dotted","striped","zigzagged"]  # 
+# concepts = ["dotted","striped","zigzagged"]  # 
 # concepts = ["tmp"]  # 
 
 # target = 'honeycomb'  
@@ -31,11 +31,11 @@ concepts = ["dotted","striped","zigzagged"]  #
 # concepts =["honeycombed","paisley"] 
 # concepts =["honeycombed","stratified","paisley"] 
 
-# target = 'spider web'  
+target = 'spider web'  
 # concepts =["cobwebbed"] 
 # concepts =["cobwebbed_porous_mixed3a", "cobwebbed_porous_mixed3b", "cobwebbed_porous_mixed4a", "cobwebbed_porous_mixed4b", "cobwebbed_porous_mixed4c", "cobwebbed_porous_mixed4d", "cobwebbed_porous_mixed4e", "cobwebbed_porous_mixed5a", "cobwebbed_porous_mixed5b"] 
 # concepts =["cobwebbed","porous"] 
-# concepts =["cobwebbed","porous","blotchy"] 
+concepts =["cobwebbed","porous","blotchy"] 
 
 # target = 'chainlink fence'  #失败
 # concepts =["grid","potholed","knitted"]  
@@ -89,7 +89,7 @@ fuse_method="transformer"
 
 dropout = 0.5
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 
 
 
