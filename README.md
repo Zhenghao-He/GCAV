@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-orange)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.18+-orange)
+
 
 ## 📝 Paper
 
