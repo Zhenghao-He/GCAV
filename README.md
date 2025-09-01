@@ -8,7 +8,7 @@
 
 ## 📝 Paper
 
-**[GCAV: A Global Concept Activation Vector Framework for Cross-Layer Consistency in Interpretability](https://arxiv.org/abs/xxxx.xxxxx)**  
+**[GCAV: A Global Concept Activation Vector Framework for Cross-Layer Consistency in Interpretability](https://arxiv.org/abs/2508.21197)**  
 *Zhenghao He, Sanchit Sinha, Guangzhi Xiong, Aidong Zhang*  
 University of Virginia  
 **ICCV 2025** (Accepted)
@@ -50,12 +50,6 @@ Our framework consists of three sequential training stages:
 ![Framework](imgs/framework.png)
 
 ## 🛠 Installation
-
-### Prerequisites
-
-- Python 3.9+
-- CUDA-compatible GPU (recommended)
-- 30+ GB free disk space for datasets
 
 ### Setup Environment
 
